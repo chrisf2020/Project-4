@@ -9,10 +9,10 @@
 # Filename: main.py
 # Purpose: agent made for benchmarking a game for adversarial search algorithms.
 #
-# Used https://en.wikipedia.org/wiki/AC-3_algorithm wikipedia linked to help implement AC-3 algorithm.
+# Used https://en.wikipedia.org/wiki/AC-3_algorithm wikipedia link to help implement AC-3 algorithm.
+# Used https://en.wikipedia.org/wiki/Backtracking algorithm wikipedia link to help implement Backtracking algorithm.
 #
 # AI USAGE: Used AI Gemini 3.8 for Function Documentation.
-#
 #
 # *****************************************************************************
 
@@ -77,3 +77,46 @@ def ac3(problem, domains, arcs=None):
                     queued.add((z, x))
  
     return True, revisions
+
+#######################################################################
+# function: backtrack
+# purpose: recursive backtracking search, assigns variables in the given order and stops at the first full assignment
+# params: problem - the parsed Problem, order - list of variable ids in assignment order, index - position in order of the variable to assign, assignment - dict of assigned variable id to register (modified in place), stats - dict with nodes_visited and backtracks counters
+# returns: True if the assignment was completed, False if this branch is a dead end
+#######################################################################
+def backtrack(problem, order, index, assignment, stats):
+    #accept when every variable has a register
+    if index == len(order):
+        return True
+ 
+    var = order[index]
+    for value in problem.domains[var]:
+        stats["nodes_visited"] += 1
+ 
+        if consistent(problem, assignment, var, value):
+            assignment[var] = value
+            if backtrack(problem, order, index + 1, assignment, stats):
+                return True
+ 
+            #subtree failed so undo and try the next value
+            del assignment[var]
+            stats["backtracks"] += 1
+ 
+    return False
+ 
+ 
+#######################################################################
+# function: backtrack_naive
+# purpose: runs plain backtracking with lexicographic variable order and ascending value order
+# params: problem - the parsed Problem
+# returns: tuple (assignment, stats) where assignment is a dict or None if unsatisfiable
+#######################################################################
+def backtrack_naive(problem):
+    order = sorted(problem.domains)
+    assignment = {}
+    stats = {"nodes_visited": 0, "backtracks": 0}
+ 
+    if backtrack(problem, order, 0, assignment, stats):
+        return assignment, stats
+ 
+    return None, stats
